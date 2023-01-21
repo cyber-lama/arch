@@ -4,6 +4,7 @@
 - [Принцип открытости/закрытости](#ocp)
 - [Принцип подстановки Барбары Лисков](#lsp)
 - [Принцип разделения интерфейса](#icp)
+- [Принцип инверсии зависимостей](#dip)
 
 
 ## srp
@@ -104,78 +105,58 @@ class Lexer
 
 В хорошо спроектированных программах новая функциональность вводится путем добавления нового кода, а не изменением старого, уже работающего.
 
-Пример нарушения принципа открытости/закрытости:
+Пример верного использования принципа открытости/закрытости:
 
 ```typescript
-class Rectangle {
-  public width: number;
-  public height: number;
 
-  public calculateArea(): number {
-    return this.width * this.height;
-  }
+interface IShape{
+    calculateArea(): number
 }
 
-class Circle {
-  public radius: number;
+class Shape implements IShape{
+    public calculateArea(): number {
+        // some logic
+    }
+}
 
-  public calculateArea(): number {
-    return Math.PI * this.radius * this.radius;
-  }
+class Rectangle extends Shape {
+    public width: number;
+    public height: number;
+
+    public calculateArea(): number {
+        return this.width * this.height;
+    }
+}
+
+class Circle extends Shape {
+    public radius: number;
+
+    public calculateArea(): number {
+        return Math.PI * this.radius * this.radius;
+    }
+}
+
+class Triangle extends Shape {
+    public base: number;
+    public height: number;
+
+    public calculateArea(): number {
+        return 0.5 * this.base * this.height;
+    }
 }
 
 class AreaCalculator {
-  public calculateTotalArea(shapes: Array<Rectangle | Circle>): number {
-    let totalArea = 0;
-    for (const shape of shapes) {
-        if (shape instanceof Rectangle) {
-          totalArea += shape.width * shape.height;
-        } else if (shape instanceof Circle) {
-          totalArea += Math.PI * shape.radius * shape.radius;
+    public calculateTotalArea(shapes: Array<IShape>): number {
+        let totalArea = 0;
+        for (const shape of shapes) {
+            totalArea += shape.calculateArea();
         }
+        return totalArea;
     }
-    return totalArea;
-  }
 }
 
 ```
 
-В этом примере AreaCalculatorкласс отвечает за вычисление общей площади набора фигур. Однако это достигается за счет жесткого кодирования конкретных реализаций calculateArea()метода для классов Rectangleи . CircleЭто означает, что если мы хотим добавить новую форму, нам нужно изменить AreaCalculatorкласс, нарушив принцип открытости/закрытости.
-
-Более правильным будет сделать так:
-```typescript
-interface Shape {
-  calculateArea(): number;
-}
-
-class Rectangle implements Shape {
-  public width: number;
-  public height: number;
-
-  public calculateArea(): number {
-    return this.width * this.height;
-  }
-}
-
-class Circle implements Shape {
-  public radius: number;
-
-  public calculateArea(): number {
-    return Math.PI * this.radius * this.radius;
-  }
-}
-
-class AreaCalculator {
-  public calculateTotalArea(shapes: Array<Shape>): number {
-    let totalArea = 0;
-    for (const shape of shapes) {
-        totalArea += shape.calculateArea();
-    }
-    return totalArea;
-  }
-}
-
-```
 
 ## lsp
 
@@ -284,4 +265,74 @@ class Circle implements Shape {
     return 2 * Math.PI * this.radius;
   }
 }
+```
+
+## dip
+
+**Принцип инверсии зависимостей**
+
+Каждый раз, когда внутри функции создается объект, появляется зависимость функции от класса этого объекта. Другими словами функция жестко завязана на работу в паре с конкретным классом. Есть формальный способ, позволяющий легко проверить насколько ваш код завязан в узел. Возьмите любую функцию и мысленно представьте, что вы переносите ее в другой проект. Сколько за собой она потянет зависимостей (а те в свою очередь свои зависимости)? Если перенос функции потребует переноса большого количества кода, то говорят, что в коде высокая связанность.
+
+Для развязки кода придуман даже специальный термин: Принцип Инверсии Зависимостей. Еще он известен как DIP из SOLID. Вот его формулировка:
+
+- Модули верхних уровней не должны зависеть от модулей нижних уровней. Оба типа модулей должны зависеть от абстракций.
+- Абстракции не должны зависеть от деталей. Детали должны зависеть от абстракций.
+
+
+
+Пример нарушения принципа инверсии зависимостей:
+```typescript
+const doSomething = () => {
+  const logger = new Logger();
+  // some code
+};
+```
+
+Как правильно:
+```typescript
+interface Logger{
+    debug(msg: string)
+}
+const doSomething = (logger: Logger) => {
+  // some code
+};
+```
+
+Еще пример правильного использования:
+
+```typescript
+// Open/Closed Principle (OCP) example
+
+class Shape {
+  public calculateArea(): number {
+    // some logic
+  }
+}
+
+class Rectangle extends Shape {
+  public width: number;
+  public height: number;
+
+  public calculateArea(): number {
+    return this.width * this.height;
+  }
+}
+
+class Circle extends Shape {
+  public radius: number;
+
+  public calculateArea(): number {
+    return Math.PI * this.radius * this.radius;
+  }
+}
+
+class Triangle extends Shape {
+  public base: number;
+  public height: number;
+
+  public calculateArea(): number {
+    return 0.5 * this.base * this.height;
+  }
+}
+
 ```
