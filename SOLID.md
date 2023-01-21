@@ -2,6 +2,8 @@
 
 - [Принцип единственной ответственности](#srp)
 - [Принцип открытости/закрытости](#ocp)
+- [Принцип подстановки Барбары Лисков](#lsp)
+- [Принцип разделения интерфейса](#icp)
 
 
 ## srp
@@ -100,7 +102,9 @@ class Lexer
 - открыты для расширения: означает, что поведение сущности может быть расширено путём создания новых типов сущностей.
 - закрыты для изменения: в результате расширения поведения сущности, не должны вноситься изменения в код, который эту сущность использует.
 
-Пример нарушения принципа открытости/закрытости
+В хорошо спроектированных программах новая функциональность вводится путем добавления нового кода, а не изменением старого, уже работающего.
+
+Пример нарушения принципа открытости/закрытости:
 
 ```typescript
 class Rectangle {
@@ -171,4 +175,113 @@ class AreaCalculator {
   }
 }
 
+```
+
+## lsp
+
+**Принцип подстановки Барбары Лисков**
+
+Наследующий класс должен дополнять, 
+а не замещать поведение базового класса.
+
+Пример нарушения принципа подстановки Барбары Лисков:
+```typescript
+class Vehicle {
+  public startEngine(): void {
+    console.log("Engine started");
+  }
+}
+
+class Car extends Vehicle {
+  public startEngine(): void {
+    throw new Error("Cars cannot start their engines");
+  }
+}
+
+function testDrive(vehicle: Vehicle): void {
+  vehicle.startEngine();
+}
+
+const car = new Car();
+testDrive(car); // will throw an error
+
+```
+
+В этом примере Carкласс расширяет Vehicleкласс и 
+переопределяет startEngine() метод для создания исключения. 
+Однако это означает, что Carкласс не является допустимой заменой
+Vehicleкласса в контексте testDrive функции,
+которая ожидает, что любой переданный ей объект
+будет иметь работающий startEngine() метод.
+
+
+## irp
+
+**Принцип разделения интерфейса**
+
+Принцип разделения интерфейсов говорит о том, 
+что слишком «толстые» интерфейсы необходимо разделять на 
+более маленькие и специфические, чтобы программные
+сущности маленьких интерфейсов знали только о методах,
+которые необходимы им в работе. В итоге, при изменении метода 
+интерфейса не должны меняться программные сущности, 
+которые этот метод не используют.
+
+
+Пример нарушения принципа разделения интерфейса:
+
+```typescript
+interface Shape {
+  calculateArea(): number;
+  calculatePerimeter(): number;
+  setWidth(width: number): void;
+  setHeight(height: number): void;
+}
+
+class Circle implements Shape {
+  public radius: number;
+
+  public calculateArea(): number {
+    return Math.PI * this.radius * this.radius;
+  }
+
+  public calculatePerimeter(): number {
+    return 2 * Math.PI * this.radius;
+  }
+
+  public setWidth(width: number): void {
+    this.radius = width / 2;
+  }
+
+  public setHeight(height: number): void {
+    this.radius = height / 2;
+  }
+}
+```
+В этом примере Shapeинтерфейс определяет несколько методов, в том числе setWidth()и setHeight(), которые не применимы к Circleклассу, так как у него нет ни ширины, ни высоты. Однако Circleкласс вынужден реализовывать эти методы, потому что он реализует Shapeинтерфейс. Это нарушает принцип разделения интерфейсов, который гласит, что интерфейсы должны быть небольшими и специфичными, и что клиенты не должны зависеть от методов, которые они не используют.
+
+Более правильным вариантом будет:
+
+```typescript
+interface Shape {
+  calculateArea(): number;
+  calculatePerimeter(): number;
+}
+
+interface ResizableShape extends Shape {
+  setWidth(width: number): void;
+  setHeight(height: number): void;
+}
+
+class Circle implements Shape {
+  public radius: number;
+
+  public calculateArea(): number {
+    return Math.PI * this.radius * this.radius;
+  }
+
+  public calculatePerimeter(): number {
+    return 2 * Math.PI * this.radius;
+  }
+}
 ```
