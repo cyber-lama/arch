@@ -1,6 +1,7 @@
 # SOLID принципы
 
 - [Принцип единственной ответственности](#srp)
+- [Принцип открытости/закрытости](#ocp)
 
 
 ## srp
@@ -88,3 +89,86 @@ class Lexer
 
 #### По данным (data)
 Данные одного программного модуля поступают на вход другого модуля.
+
+
+## ocp
+
+**Принцип открытости/закрытости**
+
+Принцип открытости/закрытости означает, что программные сущности должны быть:
+
+- открыты для расширения: означает, что поведение сущности может быть расширено путём создания новых типов сущностей.
+- закрыты для изменения: в результате расширения поведения сущности, не должны вноситься изменения в код, который эту сущность использует.
+
+Пример нарушения принципа открытости/закрытости
+
+```typescript
+class Rectangle {
+  public width: number;
+  public height: number;
+
+  public calculateArea(): number {
+    return this.width * this.height;
+  }
+}
+
+class Circle {
+  public radius: number;
+
+  public calculateArea(): number {
+    return Math.PI * this.radius * this.radius;
+  }
+}
+
+class AreaCalculator {
+  public calculateTotalArea(shapes: Array<Rectangle | Circle>): number {
+    let totalArea = 0;
+    for (const shape of shapes) {
+        if (shape instanceof Rectangle) {
+          totalArea += shape.width * shape.height;
+        } else if (shape instanceof Circle) {
+          totalArea += Math.PI * shape.radius * shape.radius;
+        }
+    }
+    return totalArea;
+  }
+}
+
+```
+
+В этом примере AreaCalculatorкласс отвечает за вычисление общей площади набора фигур. Однако это достигается за счет жесткого кодирования конкретных реализаций calculateArea()метода для классов Rectangleи . CircleЭто означает, что если мы хотим добавить новую форму, нам нужно изменить AreaCalculatorкласс, нарушив принцип открытости/закрытости.
+
+Более правильным будет сделать так:
+```typescript
+interface Shape {
+  calculateArea(): number;
+}
+
+class Rectangle implements Shape {
+  public width: number;
+  public height: number;
+
+  public calculateArea(): number {
+    return this.width * this.height;
+  }
+}
+
+class Circle implements Shape {
+  public radius: number;
+
+  public calculateArea(): number {
+    return Math.PI * this.radius * this.radius;
+  }
+}
+
+class AreaCalculator {
+  public calculateTotalArea(shapes: Array<Shape>): number {
+    let totalArea = 0;
+    for (const shape of shapes) {
+        totalArea += shape.calculateArea();
+    }
+    return totalArea;
+  }
+}
+
+```
