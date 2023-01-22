@@ -301,38 +301,43 @@ const doSomething = (logger: Logger) => {
 Еще пример правильного использования:
 
 ```typescript
-// Open/Closed Principle (OCP) example
+// Dependency Inversion Principle (DIP) example
 
-class Shape {
-  public calculateArea(): number {
-    // some logic
+interface DataFetcher {
+  fetchData(): void;
+}
+
+class Database implements DataFetcher {
+  public fetchData(): void {
+    console.log("Fetching data from the database...");
   }
 }
 
-class Rectangle extends Shape {
-  public width: number;
-  public height: number;
-
-  public calculateArea(): number {
-    return this.width * this.height;
+class WebService implements DataFetcher {
+  public fetchData(): void {
+    console.log("Fetching data from the web service...");
   }
 }
 
-class Circle extends Shape {
-  public radius: number;
+class DataAnalyzer {
+  private dataFetcher: DataFetcher;
 
-  public calculateArea(): number {
-    return Math.PI * this.radius * this.radius;
+  constructor(dataFetcher: DataFetcher) {
+    this.dataFetcher = dataFetcher;
+  }
+
+  public analyze(): void {
+    this.dataFetcher.fetchData();
+    // perform analysis
   }
 }
 
-class Triangle extends Shape {
-  public base: number;
-  public height: number;
+const database = new Database();
+const analyzer = new DataAnalyzer(database);
+analyzer.analyze();
 
-  public calculateArea(): number {
-    return 0.5 * this.base * this.height;
-  }
-}
+const webService = new WebService();
+const analyzer2 = new DataAnalyzer(webService);
+analyzer2.analyze();
 
 ```
